@@ -448,9 +448,6 @@ static char const * const kEmptyDataSetView =       "emptyDataSetView";
         
         DZNEmptyDataSetView *view = self.emptyDataSetView;
         
-        // Configure empty dataset fade in display
-        view.fadeInOnDisplay = [self dzn_shouldFadeIn];
-        
         if (!view.superview) {
             // Send the view all the way to the back, in case a header and/or footer is present, as well as for sectionHeaders or any other content
             if (([self isKindOfClass:[UITableView class]] || [self isKindOfClass:[UICollectionView class]]) && self.subviews.count > 1) {
@@ -486,14 +483,14 @@ static char const * const kEmptyDataSetView =       "emptyDataSetView";
             
             // Configure Image
             if (image) {
-                if ([image respondsToSelector:@selector(imageWithRenderingMode:)]) {
-                    view.imageView.image = [image imageWithRenderingMode:renderingMode];
-                    view.imageView.tintColor = imageTintColor;
-                }
-                else {
+//                if ([image respondsToSelector:@selector(imageWithRenderingMode:)]) {
+//                    view.imageView.image = [image imageWithRenderingMode:renderingMode];
+//                    view.imageView.tintColor = imageTintColor;
+//                }
+//                else {
                     // iOS 6 fallback: insert code to convert imaged if needed
                     view.imageView.image = image;
-                }
+//                }
             }
             
             // Configure title label
@@ -529,6 +526,9 @@ static char const * const kEmptyDataSetView =       "emptyDataSetView";
         
         // Configure empty dataset userInteraction permission
         view.userInteractionEnabled = [self dzn_isTouchAllowed];
+        
+        // Configure empty dataset fade in display
+        view.fadeInOnDisplay = [self dzn_shouldFadeIn];
         
         [view setupConstraints];
         
@@ -735,8 +735,7 @@ Class dzn_baseClassToSwizzleForTarget(id target)
 
 - (void)didMoveToSuperview
 {
-    CGRect superviewBounds = self.superview.bounds;
-    self.frame = CGRectMake(0.0, 0.0, CGRectGetWidth(superviewBounds), CGRectGetHeight(superviewBounds));
+    self.frame = self.superview.bounds;
     
     void(^fadeInBlock)(void) = ^{_contentView.alpha = 1.0;};
     
@@ -828,11 +827,16 @@ Class dzn_baseClassToSwizzleForTarget(id target)
     {
         _button = [UIButton buttonWithType:UIButtonTypeCustom];
         _button.translatesAutoresizingMaskIntoConstraints = NO;
-        _button.backgroundColor = [UIColor clearColor];
+//      _button.backgroundColor = [UIColor colorWithRed:(112/255.0) green:(3/255.0) blue:(187/255.0) alpha:1.0];
+      _button.layer.cornerRadius = 19;
+      _button.layer.masksToBounds = YES;
+      _button.contentEdgeInsets = UIEdgeInsetsMake(0, 13, 0, 13);
         _button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
         _button.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
         _button.accessibilityIdentifier = @"empty set button";
-        
+      
+      
+      
         [_button addTarget:self action:@selector(didTapButton:) forControlEvents:UIControlEventTouchUpInside];
         
         [_contentView addSubview:_button];
@@ -990,9 +994,13 @@ Class dzn_baseClassToSwizzleForTarget(id target)
             
             [subviewStrings addObject:@"button"];
             views[[subviewStrings lastObject]] = _button;
-            
-            [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(padding@750)-[button(>=0)]-(padding@750)-|"
-                                                                                     options:0 metrics:metrics views:views]];
+          
+          [[_button.centerXAnchor constraintEqualToAnchor: self.contentView.centerXAnchor] setActive:YES];
+          [[_button.widthAnchor constraintGreaterThanOrEqualToConstant: 100] setActive:YES];
+          [[_button.heightAnchor constraintEqualToConstant: 38] setActive:YES];
+          
+//            [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(padding@750)-[button(>=0)]-(padding@750)-|"
+//                                                                                     options:0 metrics:metrics views:views]];
         }
         // or removes from its superview
         else {
